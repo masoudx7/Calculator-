@@ -1,0 +1,6 @@
+{
+  "name": "Undo Calc Engine",
+  "description": "ماشین حساب مهندسی و پیشرفته توسعه یافته توسط گروه مهندسی UNDO",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
