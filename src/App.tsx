@@ -180,11 +180,18 @@ export default function App() {
   });
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [language, setLanguage] = useState<"fa" | "en">("fa");
+  const [language, setLanguage] = useState<"fa" | "en">(() => {
+    try {
+      const saved = localStorage.getItem("undo_calc_lang");
+      return saved === "fa" || saved === "en" ? saved : "en";
+    } catch {
+      return "en";
+    }
+  });
   const [activeKey, setActiveKey] = useState<string | null>(null);
   
   // App Modes
-  const [calcMode, setCalcMode] = useState<"simple" | "scientific" | "converter">("scientific");
+  const [calcMode, setCalcMode] = useState<"simple" | "scientific" | "converter">("simple");
   const [isRad, setIsRad] = useState<boolean>(true);
 
   // Unit Converter State
@@ -202,6 +209,13 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("undo_calc_history", JSON.stringify(history));
   }, [history]);
+
+  // Save language to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("undo_calc_lang", language);
+    } catch {}
+  }, [language]);
 
   // Lazy-initialize Web Audio Context for haptic click
   const playClickSound = () => {
@@ -775,24 +789,29 @@ export default function App() {
   return (
     <div 
       dir={language === "fa" ? "rtl" : "ltr"}
-      className="min-h-screen bg-radial from-neutral-900 to-neutral-950 text-white flex flex-col justify-between items-center p-4 md:p-8 font-sans select-none overflow-x-hidden"
+      className="min-h-screen w-full max-w-full bg-radial from-neutral-900 to-neutral-950 text-white flex flex-col justify-between items-center px-3 py-4 sm:p-6 md:p-8 font-sans select-none overflow-x-hidden relative"
     >
       
-      {/* Dynamic Glow Accents */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-500/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Dynamic Glow Accents inside an overflow-hidden wrapper */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-10 left-10 w-72 md:w-96 h-72 md:h-96 bg-cyan-500/5 rounded-full blur-[100px] md:blur-[120px]" />
+        <div className="absolute bottom-10 right-10 w-72 md:w-96 h-72 md:h-96 bg-orange-500/5 rounded-full blur-[100px] md:blur-[120px]" />
+      </div>
 
       {/* Branded Header: UNDO Engineering Group */}
-      <header className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center py-4 border-b border-neutral-800/80 z-10 gap-4">
+      <header className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center py-3 md:py-4 border-b border-neutral-800/80 z-10 gap-3 md:gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 flex justify-center items-center shadow-lg shadow-orange-500/20">
-            <span className="text-black font-black text-xl font-mono">U</span>
-          </div>
+          <img 
+            src="/icon-192.jpg" 
+            alt="Undo Calc Icon" 
+            className="w-9 h-9 md:w-10 md:h-10 rounded-xl object-cover shadow-lg shadow-orange-500/20 border border-orange-500/30"
+            referrerPolicy="no-referrer"
+          />
           <div className="flex flex-col items-start">
-            <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-neutral-100 to-neutral-400 bg-clip-text text-transparent">
+            <h1 className="text-lg md:text-xl font-bold tracking-tight bg-gradient-to-r from-white via-neutral-100 to-neutral-400 bg-clip-text text-transparent">
               Undo Calc Engine
             </h1>
-            <span className="text-[10px] tracking-widest text-neutral-400 font-mono font-medium">
+            <span className="text-[9px] md:text-[10px] tracking-widest text-neutral-400 font-mono font-medium">
               {language === "fa" ? "محاسبه‌گر پیشرفته مهندسی" : "ADVANCED SCIENTIFIC ENGINE"}
             </span>
           </div>
@@ -804,17 +823,17 @@ export default function App() {
           <button
             id="history-btn"
             onClick={() => { playClickSound(); setIsHistoryOpen(true); }}
-            className="w-10 h-10 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 flex justify-center items-center transition duration-150 active:scale-95 cursor-pointer border border-neutral-800"
+            className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 flex justify-center items-center transition duration-150 active:scale-95 cursor-pointer border border-neutral-800"
             title={language === "fa" ? "تاریخچه محاسبات" : "Calculation History"}
           >
-            <History size={18} />
+            <History size={17} />
           </button>
 
           {/* Language translation switcher */}
           <button
             id="lang-btn"
             onClick={() => { playClickSound(); setLanguage(l => l === "fa" ? "en" : "fa"); }}
-            className="px-3.5 h-10 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 text-xs font-medium flex items-center gap-1.5 transition duration-150 active:scale-95 cursor-pointer border border-neutral-800"
+            className="px-3 h-9 md:h-10 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 text-xs font-medium flex items-center gap-1.5 transition duration-150 active:scale-95 cursor-pointer border border-neutral-800"
           >
             <ArrowLeftRight size={12} className="text-orange-500" />
             <span>{language === "fa" ? "English" : "فارسی"}</span>
@@ -824,19 +843,19 @@ export default function App() {
           <button
             id="sound-btn"
             onClick={() => { setSoundEnabled(!soundEnabled); setTimeout(playClickSound, 50); }}
-            className={`w-10 h-10 rounded-xl flex justify-center items-center transition duration-150 active:scale-95 cursor-pointer border ${soundEnabled ? "bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/20" : "bg-neutral-900 text-neutral-500 border-neutral-800 hover:bg-neutral-800"}`}
+            className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex justify-center items-center transition duration-150 active:scale-95 cursor-pointer border ${soundEnabled ? "bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/20" : "bg-neutral-900 text-neutral-500 border-neutral-800 hover:bg-neutral-800"}`}
             title={language === "fa" ? "صدا" : "Sound"}
           >
-            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            {soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
           </button>
         </div>
       </header>
 
       {/* Main Container Workspace */}
-      <main className="w-full flex-1 flex flex-col justify-center py-6 md:py-8 z-10">
+      <main className="w-full flex-1 flex flex-col justify-center py-4 md:py-8 z-10">
         
         {/* Navigation Tabs for modes */}
-        <div className="flex justify-center p-1.5 bg-neutral-900/95 rounded-2xl w-full max-w-md mx-auto mb-6 border border-neutral-800 shadow-xl gap-0.5">
+        <div className="flex justify-center p-1 bg-neutral-900/95 rounded-2xl w-full max-w-xs sm:max-w-md mx-auto mb-4 md:mb-6 border border-neutral-800 shadow-xl gap-0.5">
           <button
             onClick={() => { playClickSound(); setCalcMode("simple"); }}
             className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all relative cursor-pointer ${
@@ -899,36 +918,36 @@ export default function App() {
         </div>
 
         <div 
-          className={`w-full mx-auto bg-neutral-900/60 border border-neutral-800 shadow-2xl p-6 md:p-8 rounded-[32px] flex flex-col transition-all duration-300 ease-in-out ${
+          className={`w-full mx-auto bg-neutral-900/60 border border-neutral-800 shadow-2xl p-4 sm:p-6 md:p-8 rounded-3xl md:rounded-[32px] flex flex-col transition-all duration-300 ease-in-out ${
             calcMode === "simple" ? "max-w-md" : "max-w-5xl"
           }`}
         >
           {/* Conditionally render Calculator, Converter or Tools Panel */}
           {(calcMode === "simple" || calcMode === "scientific") ? (
             <>
-              {/* DISPLAY COMPONENT */}
+              {/* DISPLAY COMPONENT (PINNED TO TOP ON SCROLL) */}
               <div 
-                className="w-full flex flex-col justify-end items-end px-5 py-6 md:py-8 min-h-[140px] md:min-h-[160px] cursor-ew-resize relative rounded-2xl bg-black/40 mb-6 border border-neutral-800/60"
+                className="w-full flex flex-col justify-end items-end px-4 sm:px-5 py-4 sm:py-5 md:py-7 min-h-[115px] sm:min-h-[130px] md:min-h-[150px] cursor-ew-resize relative rounded-2xl bg-neutral-950/95 backdrop-blur-xl mb-4 sm:mb-6 border border-neutral-800/90 shadow-2xl sticky top-2 md:top-4 z-20 touch-pan-y overflow-hidden"
                 onPointerDown={handlePointerDown}
                 onPointerUp={handlePointerUp}
                 title={language === "fa" ? "برای پاک کردن رقم آخر به چپ یا راست بکشید" : "Swipe left/right to delete last digit"}
               >
                 {/* Indicators & Labels */}
-                <div className={`absolute top-4 ${language === "fa" ? "right-4" : "left-4"} flex gap-2 items-center`}>
+                <div className={`absolute top-3 sm:top-4 ${language === "fa" ? "right-3 sm:right-4" : "left-3 sm:left-4"} flex gap-1.5 sm:gap-2 items-center`}>
                   {calcMode === "scientific" && (
-                    <span className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-neutral-800 uppercase">
+                    <span className="text-[9px] sm:text-[10px] font-mono tracking-wider px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-neutral-800 uppercase">
                       {isRad ? (language === "fa" ? "رادیان" : "Rad") : (language === "fa" ? "درجه" : "Deg")}
                     </span>
                   )}
                   {operation && (
-                    <span className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded bg-orange-950/40 text-orange-400 border border-orange-900/30">
+                    <span className="text-[9px] sm:text-[10px] font-mono tracking-wider px-2 py-0.5 rounded bg-orange-950/40 text-orange-400 border border-orange-900/30">
                       {operation}
                     </span>
                   )}
                 </div>
 
                 {/* Active ongoing formula / memory display */}
-                <div className="h-6 text-neutral-500 text-right font-medium text-sm w-full select-none pr-1 mb-1">
+                <div className="h-5 sm:h-6 text-neutral-500 text-right font-medium text-xs sm:text-sm w-full select-none pr-1 mb-1 truncate">
                   {prevValue && (
                     <span className="animate-fade-in font-mono">
                       {formatDisplayString(prevValue)} {operation}
@@ -937,9 +956,9 @@ export default function App() {
                 </div>
 
                 {/* Main numeric display value */}
-                <div className="w-full text-right select-all">
+                <div className="w-full text-right select-all overflow-hidden">
                   <span 
-                    className={`font-light transition-all duration-150 tracking-tight leading-none inline-block font-mono ${getFontSizeClass(display)}`}
+                    className={`font-light transition-all duration-150 tracking-tight leading-none inline-block font-mono break-all ${getFontSizeClass(display)}`}
                   >
                     {formatDisplayString(display)}
                   </span>
@@ -947,14 +966,14 @@ export default function App() {
                 
                 {/* Swipe helper banner */}
                 {display !== "0" && display.length <= 4 && (
-                  <div className={`absolute ${language === "fa" ? "left-5" : "right-5"} bottom-1 text-[9px] text-neutral-600 animate-pulse pointer-events-none`}>
+                  <div className={`absolute ${language === "fa" ? "left-4" : "right-4"} bottom-1 text-[8px] sm:text-[9px] text-neutral-600 animate-pulse pointer-events-none hidden sm:block`}>
                     {language === "fa" ? "← پاک کردن با کشیدن انگشت (Swipe)" : "← swipe on screen to delete last digit"}
                   </div>
                 )}
               </div>
 
               {/* KEYPAD LAYOUT */}
-              <div className="w-full flex flex-col lg:flex-row gap-6">
+              <div className="w-full flex flex-col lg:flex-row gap-4 sm:gap-6">
                 
                 {/* Extensive scientific buttons (Visible only in "scientific" mode) */}
                 <AnimatePresence mode="wait">
@@ -964,7 +983,7 @@ export default function App() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.2 }}
-                      className={`w-full lg:w-[50%] grid grid-cols-4 gap-3 ${
+                      className={`w-full lg:w-[50%] grid grid-cols-4 gap-2 sm:gap-3 ${
                         language === "fa" ? "lg:border-l lg:pl-6" : "lg:border-r lg:pr-6"
                       } border-neutral-800/40`}
                       id="scientific-keyboard"
@@ -975,7 +994,7 @@ export default function App() {
                           <button
                             key={func.id}
                             onClick={() => handleScientificAction(func.id)}
-                            className={`h-14 rounded-xl flex flex-col justify-center items-center text-xs transition duration-150 relative overflow-hidden group cursor-pointer active:scale-95 ${
+                            className={`h-12 sm:h-14 rounded-xl flex flex-col justify-center items-center text-xs transition duration-150 relative overflow-hidden group cursor-pointer active:scale-95 ${
                               isRadBtn && !isRad
                                 ? "bg-[#ff9f0a]/10 text-[#ff9f0a] border border-[#ff9f0a]/30"
                                 : isRadBtn
@@ -984,8 +1003,8 @@ export default function App() {
                             }`}
                             title={func.sub}
                           >
-                            <span className="font-semibold text-sm">{func.label}</span>
-                            <span className="text-[8px] text-neutral-500 uppercase mt-0.5 scale-90 group-hover:text-neutral-400">
+                            <span className="font-semibold text-xs sm:text-sm">{func.label}</span>
+                            <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase mt-0.5 scale-90 group-hover:text-neutral-400">
                               {func.id === "rad" ? (isRad ? "Rad" : "Deg") : func.id}
                             </span>
                           </button>
@@ -997,7 +1016,7 @@ export default function App() {
 
                 {/* Numeric and Basic Arithmetic Grid */}
                 <div 
-                  className={`grid grid-cols-4 gap-3 transition-all duration-300 ${
+                  className={`grid grid-cols-4 gap-2 sm:gap-3 transition-all duration-300 ${
                     calcMode === "simple" ? "w-full" : "w-full lg:w-[50%]"
                   }`}
                   id="calculator-keyboard"
@@ -1006,7 +1025,7 @@ export default function App() {
                   <button
                     id="btn-clear"
                     onClick={handleClear}
-                    className={`h-14 rounded-xl flex justify-center items-center text-sm font-semibold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-sm font-semibold transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "AC" ? "bg-white text-black" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700/50"
                     }`}
                   >
@@ -1016,7 +1035,7 @@ export default function App() {
                   <button
                     id="btn-sign"
                     onClick={handleToggleSign}
-                    className="h-14 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700/50 flex justify-center items-center text-lg font-medium transition duration-150 active:scale-95 cursor-pointer"
+                    className="h-12 sm:h-14 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700/50 flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 active:scale-95 cursor-pointer"
                   >
                     ⁺∕₋
                   </button>
@@ -1024,7 +1043,7 @@ export default function App() {
                   <button
                     id="btn-percent"
                     onClick={handlePercent}
-                    className={`h-14 rounded-xl flex justify-center items-center text-sm font-semibold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-sm font-semibold transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "%" ? "bg-white text-black" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700/50"
                     }`}
                   >
@@ -1034,7 +1053,7 @@ export default function App() {
                   <button
                     id="btn-divide"
                     onClick={() => handleOperator("÷")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-lg sm:text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
                       operation === "÷" 
                         ? "bg-white text-[#ff9f0a]" 
                         : activeKey === "÷" 
@@ -1049,7 +1068,7 @@ export default function App() {
                   <button
                     id="btn-7"
                     onClick={() => handleDigit("7")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "7" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1059,7 +1078,7 @@ export default function App() {
                   <button
                     id="btn-8"
                     onClick={() => handleDigit("8")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "8" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1069,7 +1088,7 @@ export default function App() {
                   <button
                     id="btn-9"
                     onClick={() => handleDigit("9")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "9" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1079,7 +1098,7 @@ export default function App() {
                   <button
                     id="btn-multiply"
                     onClick={() => handleOperator("×")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-lg sm:text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
                       operation === "×" 
                         ? "bg-white text-[#ff9f0a]" 
                         : activeKey === "×" 
@@ -1094,7 +1113,7 @@ export default function App() {
                   <button
                     id="btn-4"
                     onClick={() => handleDigit("4")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "4" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1104,7 +1123,7 @@ export default function App() {
                   <button
                     id="btn-5"
                     onClick={() => handleDigit("5")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "5" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1114,7 +1133,7 @@ export default function App() {
                   <button
                     id="btn-6"
                     onClick={() => handleDigit("6")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "6" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1124,7 +1143,7 @@ export default function App() {
                   <button
                     id="btn-minus"
                     onClick={() => handleOperator("-")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-lg sm:text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
                       operation === "-" 
                         ? "bg-white text-[#ff9f0a]" 
                         : activeKey === "-" 
@@ -1139,7 +1158,7 @@ export default function App() {
                   <button
                     id="btn-1"
                     onClick={() => handleDigit("1")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "1" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1149,7 +1168,7 @@ export default function App() {
                   <button
                     id="btn-2"
                     onClick={() => handleDigit("2")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "2" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1159,7 +1178,7 @@ export default function App() {
                   <button
                     id="btn-3"
                     onClick={() => handleDigit("3")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "3" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1169,7 +1188,7 @@ export default function App() {
                   <button
                     id="btn-plus"
                     onClick={() => handleOperator("+")}
-                    className={`h-14 rounded-xl flex justify-center items-center text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-lg sm:text-xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
                       operation === "+" 
                         ? "bg-white text-[#ff9f0a]" 
                         : activeKey === "+" 
@@ -1184,9 +1203,9 @@ export default function App() {
                   <button
                     id="btn-0"
                     onClick={() => handleDigit("0")}
-                    className={`col-span-2 h-14 rounded-xl flex items-center ${
-                      language === "fa" ? "pr-6" : "pl-6"
-                    } text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`col-span-2 h-12 sm:h-14 rounded-xl flex items-center ${
+                      language === "fa" ? "pr-4 sm:pr-6" : "pl-4 sm:pl-6"
+                    } text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "0" ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1196,7 +1215,7 @@ export default function App() {
                   <button
                     id="btn-decimal"
                     onClick={handleDecimal}
-                    className={`h-14 rounded-xl flex justify-center items-center text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-base sm:text-lg font-medium transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "." ? "bg-neutral-500 text-white" : "bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-800"
                     }`}
                   >
@@ -1206,7 +1225,7 @@ export default function App() {
                   <button
                     id="btn-equal"
                     onClick={handleEqual}
-                    className={`h-14 rounded-xl flex justify-center items-center text-2xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
+                    className={`h-12 sm:h-14 rounded-xl flex justify-center items-center text-xl sm:text-2xl font-bold transition duration-150 cursor-pointer active:scale-95 ${
                       activeKey === "=" ? "bg-neutral-200 text-[#ff9f0a]" : "bg-[#ff9f0a] hover:bg-[#ffb03a] text-white"
                     }`}
                   >

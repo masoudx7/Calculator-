@@ -1,0 +1,24 @@
+{
+  "name": "Undo Calc Engine",
+  "short_name": "Undo Calc",
+  "description": "Advanced scientific & engineering calculator with undo step history, unit converter, and gesture deletion.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff9f0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
